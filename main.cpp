@@ -30,10 +30,12 @@ bool checkValidationLayerSupport() {
         bool layerFound = false;
 
         for (const auto &layerProperties : availableLayers) {
-            if (strcmp(layerName, layerProperties.layerName) == 0) {
+            if (strcmp(layerName, layerProperties.layerName) == 0) { // check if the requested validation layers is exists
                 std::cout << "[layer name]\t" << layerProperties.layerName << std::endl;
                 layerFound = true;
                 break;
+            } else {
+                std::cout << "[DEBUG]] no validation layer named: " << layerProperties.layerName << std::endl;
             }
         }
 
@@ -93,7 +95,13 @@ class HelloTriangleApplication
             // continue the global extension setup
             create_info.enabledExtensionCount = glfwExtensionCount; // global extensions
             create_info.ppEnabledExtensionNames = glfwExtensions; // global extensions
-            create_info.enabledLayerCount = 0; // global extensions
+            // create_info.enabledLayerCount = 0; // global extensions
+            if (enableValidationLayers) {
+                create_info.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+                create_info.ppEnabledLayerNames = validationLayers.data(); // set the validation layers
+            } else {
+                create_info.enabledLayerCount = 0;
+            }
 
             // create vulkan instance based on the above configuration
             VkResult result = vkCreateInstance(&create_info, nullptr, &m_instance);
@@ -116,7 +124,9 @@ class HelloTriangleApplication
                 std::cout << '\t' << extension.extensionName << " " << extension.specVersion << std::endl;
             }
 
-            checkValidationLayerSupport();
+            if (enableValidationLayers && !checkValidationLayerSupport()) {
+                throw std::runtime_error("requested validation layer(s) is not exists");
+            }
         }
 
         // Hold the Vulkan object
